@@ -11,8 +11,8 @@ import (
 )
 
 var usersPasswords = map[string][]byte {
-	"joe": []byte(""),
-	"mary": []byte(""),
+	"joe": 	[]byte("$2a$10$8kfCgrw46NKF79hfwmQTRuMi/EG5VYORx2fOTuqHlTUSfp4irKMNm"), //Actual password - "112233"
+	"mary": []byte("$2a$10$O.CMUNt0vN5GoWijbFmqBe7I/lMtnoU8Gvs5eLr10ynvZ37f6ZaK2"), //Actual password - "SuperSecretPassword0987"
 }
 
 func verifyUserPass(username, password string) bool {
@@ -52,11 +52,11 @@ func main() {
 	})
 
 	srv := &http.Server {
-		Addr: *addr,
-		Handler: mux,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
-			PreferServerCipherSuites: true,
+		Addr: 		*addr,
+		Handler: 	mux,
+		TLSConfig: 	&tls.Config{
+					MinVersion: tls.VersionTLS13,
+					PreferServerCipherSuites: true,
 		},
 	}
 
