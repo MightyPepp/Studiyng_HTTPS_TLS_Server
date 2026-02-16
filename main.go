@@ -1,20 +1,68 @@
 package main
 
 import (
+	"crypto/tls"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
+var usersPasswords = map[string][]byte {
+	"joe": []byte(""),
+	"mary": []byte(""),
+}
+
+func verifyUserPass(username, password string) bool {
+	wantPass, hasUser := usersPasswords[username]
+	if !hasUser {
+		return false
+	} 
+	if cmperr := bcrypt.CompareHashAndPassword(wantPass, []byte(password)); cmperr == nil {
+		return true
+	}
+	return false
+}
+
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, HTTPS!")
+	addr := flag.String("addr", ":8443", "HTTPS network addres")
+	certFile := flag.String("certfile", "server.crt", "certificate PEM file")
+	keyFile := flag.String("keyfile", "server.key", "key PEM file")
+	flag.Parse()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprintf(w, "С гордостью представляю свой TLS сервер")
 	})
 
-	log.Println("Сервер запущен на :8443")
+	mux.HandleFunc("/secret/", func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if ok && verifyUserPass(user, pass) {
+			fmt.Fprintf(w, "U get to see the secret!")
+		} else {
+			w.Header().Set("WWW-Authenticate", `Basic realm="api"`)
+			http.Error(w, "Unautgirized", http.StatusUnauthorized)
+		}
+	})
 
-	err := http.ListenAndServeTLS("localhost:8443", "server.crt", "server.key", nil)
+	srv := &http.Server {
+		Addr: *addr,
+		Handler: mux,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS13,
+			PreferServerCipherSuites: true,
+		},
+	}
+
+	log.Printf("Starting server on %s", *addr)
+	err := srv.ListenAndServeTLS(*certFile, *keyFile)
 	if err != nil {
-		log.Fatal("Ошибка запуска сервера", err)
+		log.Fatal(err)
 	}
 }
