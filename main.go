@@ -28,8 +28,8 @@ func verifyUserPass(username, password string) bool {
 
 func main() {
 	addr := flag.String("addr", ":8443", "HTTPS network addres")
-	certFile := flag.String("certfile", "server.crt", "certificate PEM file")
-	keyFile := flag.String("keyfile", "server.key", "key PEM file")
+	certFile := flag.String("certfile", "cert.pem", "certificate PEM file")
+	keyFile := flag.String("keyfile", "key.pem", "key PEM file")
 	flag.Parse()
 
 	mux := http.NewServeMux()
